@@ -1,0 +1,90 @@
+#!/usr/bin/bash
+
+verbose=""
+
+function install() {
+    if [ $# = 0 ]; then
+        installHelp
+        return
+    fi
+
+    while getopts :v OPT; do
+        case $OPT in
+            v|+v)
+                verbose="-v"
+                ;;
+            *)
+                echo "usage: ${0##*/} [+-v} [--] ARGS..."
+                exit 2
+        esac
+    done
+    shift $(( OPTIND - 1 ))
+    OPTIND=1
+
+    while [ $# != 0 ]; do
+        case "$1" in
+            all)
+                install_goimports
+                install_golint
+                install_staticcheck
+                install_interfacer
+                ;;
+            goimports)
+                install_goimports
+                ;;
+            golint)
+                install_golint
+                ;;
+            staticcheck)
+                install_staticcheck
+                ;;
+            interfacer)
+                install_interfacer
+                ;;
+        esac
+        shift
+    done
+}
+
+function install_goimports() {
+    go get ${verbose} -u golang.org/x/tools/cmd/goimports
+}
+
+function install_golint() {
+    go get ${verbose} -u github.com/golang/lint/golint
+}
+
+function install_staticcheck() {
+    go get ${verbose} -u honnef.co/go/tools/...
+}
+
+function install_interfacer() {
+    go get ${verbose} -u mvdan.cc/interfacer
+}
+
+function genericHelp() {
+    echo "Usage: $0 SUBCOMMAND"
+    echo "Subcommands:"
+    echo "        install"
+}
+
+function installHelp() {
+    echo "Usage: $0 install TOOLNAME [TOOLNAME...]"
+    echo "Tools:"
+    echo "        goimports"
+    echo "        golint"
+    echo "        staticcheck"
+    echo "        interfacer"
+}
+
+subcommand="$1"
+shift
+
+case $subcommand in
+    install)
+        install $@
+        ;;
+    *)
+        echo "ERROR: no subcommand specified."
+        genericHelp
+esac
